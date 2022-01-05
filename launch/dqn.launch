@@ -1,0 +1,3 @@
+<launch>
+  <node pkg="IV_project" type="dqn.py" name="dqn" output="screen" />
+</launch>

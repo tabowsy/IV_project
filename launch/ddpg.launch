@@ -1,0 +1,4 @@
+<launch>
+  <node pkg="IV_project" type="ddpg.py" name="ddpg" output="screen" />
+</launch>
+
