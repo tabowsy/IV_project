@@ -24,6 +24,8 @@ import copy
 #np.random.seed(0)
 #random.seed(0)
 
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
 dirPath = os.path.dirname(os.path.realpath(__file__))
 #---Functions to make network updates---#
  
@@ -185,12 +187,12 @@ class Trainer:
         self.action_limit_w = action_limit_w
         self.ram = ram
         
-        self.actor = Actor(self.state_dim, self.action_dim, self.action_limit_v, self.action_limit_w)
-        self.target_actor = Actor(self.state_dim, self.action_dim, self.action_limit_v, self.action_limit_w)
+        self.actor = Actor(self.state_dim, self.action_dim, self.action_limit_v, self.action_limit_w).to(device)
+        self.target_actor = Actor(self.state_dim, self.action_dim, self.action_limit_v, self.action_limit_w).to(device)
         self.actor_optimizer = torch.optim.Adam(self.actor.parameters(), LEARNING_RATE)
         
-        self.critic = Critic(self.state_dim, self.action_dim)
-        self.target_critic = Critic(self.state_dim, self.action_dim)
+        self.critic = Critic(self.state_dim, self.action_dim).to(device)
+        self.target_critic = Critic(self.state_dim, self.action_dim).to(device)
         self.critic_optimizer = torch.optim.Adam(self.critic.parameters(), LEARNING_RATE)
         self.pub_qvalue = rospy.Publisher('qvalue', Float32, queue_size=5)
         self.qvalue = Float32()
@@ -199,13 +201,13 @@ class Trainer:
         hard_update(self.target_critic, self.critic)
         
     def get_exploitation_action(self,state):
-        state = torch.from_numpy(state)
+        state = torch.from_numpy(state).to(device)
         action = self.actor.forward(state).detach()
         #print('actionploi', action)
         return action.data.numpy()
         
     def get_exploration_action(self, state):
-        state = torch.from_numpy(state)
+        state = torch.from_numpy(state).to(device)
         action = self.actor.forward(state).detach()
         new_action = action.data.numpy()
         return new_action
@@ -213,11 +215,11 @@ class Trainer:
     def optimizer(self):
         s_sample, a_sample, r_sample, new_s_sample, done_sample = ram.sample(BATCH_SIZE)
         
-        s_sample = torch.from_numpy(s_sample)
-        a_sample = torch.from_numpy(a_sample)
-        r_sample = torch.from_numpy(r_sample)
-        new_s_sample = torch.from_numpy(new_s_sample)
-        done_sample = torch.from_numpy(done_sample)
+        s_sample = torch.from_numpy(s_sample).to(device)
+        a_sample = torch.from_numpy(a_sample).to(device)
+        r_sample = torch.from_numpy(r_sample).to(device)
+        new_s_sample = torch.from_numpy(new_s_sample).to(device)
+        done_sample = torch.from_numpy(done_sample).to(device)
         
         #-------------- optimize critic
         
